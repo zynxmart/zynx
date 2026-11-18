@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Delivery Dashboard · ZYNX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0e1116;--mute:#6b7385;--line:#e6e9f1;--bg:#f4f6fb;--blue:#2f63e0;--green:#1f9d55;--amber:#f59e0b;--red:#d6473c;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:40px;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .top{background:#000;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10;}
+  .top h1{font-size:16px;font-weight:800;letter-spacing:.02em;}
+  .top small{display:block;color:#9aa3b5;font-size:12px;margin-top:2px;}
+  .top a{color:#fff;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #333;padding:8px 14px;border-radius:999px;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .loc{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px;margin-bottom:14px;}
+  .dot{width:10px;height:10px;border-radius:50%;background:#b8bfcc;flex-shrink:0;}
+  .dot.on{background:var(--green);box-shadow:0 0 0 0 rgba(31,157,85,.5);animation:pulse 1.8s infinite;}
+  @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(31,157,85,0)}100%{box-shadow:0 0 0 0 rgba(31,157,85,0)}}
+  .loc b{display:block;font-size:13px;} .loc span{color:var(--mute);font-size:12px;}
+  .loc button{margin-left:auto;background:var(--ink);color:#fff;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;}
+  .stat b{display:block;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;} .stat small{font-size:11px;color:var(--mute);font-weight:600;}
+  .stat.pend b{color:var(--amber);} .stat.done b{color:var(--green);}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .tab{flex:1;padding:11px;border-radius:12px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:13.5px;color:var(--mute);}
+  .tab.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .num{font-weight:800;font-size:15px;} .sub{color:var(--mute);font-size:12.5px;margin-top:2px;}
+  .chip{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+  .chip.assigned{background:#eef3ff;color:var(--blue);} .chip.way{background:#fff4dd;color:#a96a00;} .chip.done{background:#e6f6ec;color:#1f7a45;}
+  .addr{margin:12px 0 8px;font-size:13.5px;line-height:1.55;}
+  .items{font-size:12.5px;color:var(--mute);margin-bottom:10px;line-height:1.5;}
+  .pay{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:#f6f8fd;font-size:13px;margin-bottom:12px;}
+  .pay.cod{background:#fff4dd;} .pay b{font-size:16px;}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .btn{padding:12px;border-radius:12px;font-weight:700;font-size:13.5px;background:#fff;border:1.5px solid var(--line);color:var(--ink);text-align:center;text-decoration:none;display:block;}
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);} .btn.green{background:var(--green);color:#fff;border-color:var(--green);} .btn.full{grid-column:1/-1;}
+  .empty{text-align:center;color:var(--mute);padding:46px 10px;font-size:14px;line-height:1.6;}
+  .gate{max-width:420px;margin:90px auto;text-align:center;padding:0 24px;} .gate h2{margin-bottom:10px;} .gate p{color:var(--mute);line-height:1.6;margin-bottom:20px;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .overlay.show{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom));animation:up .3s ease;}
+  @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .sheet h3{font-size:18px;margin-bottom:6px;} .sheet p{color:var(--mute);font-size:13.5px;line-height:1.55;margin-bottom:16px;}
+  .code{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+  .code input{width:46px;height:56px;text-align:center;font-size:24px;font-weight:800;border:2px solid var(--line);border-radius:12px;font-family:inherit;}
+  .code input:focus{outline:none;border-color:var(--blue);}
+  .err{color:var(--red);font-size:13px;font-weight:600;text-align:center;min-height:20px;margin-bottom:8px;}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 20px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center;}
+  .toast.show{opacity:1;} .toast.ok{background:var(--green);} .toast.bad{background:var(--red);}
+  .ok-anim{width:84px;height:84px;border-radius:50%;background:var(--green);color:#fff;font-size:44px;display:flex;align-items:center;justify-content:center;margin:6px auto 14px;animation:pop .5s cubic-bezier(.2,1.4,.4,1);}
+  @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+  @media (prefers-reduced-motion: reduce){ .dot.on,.ok-anim,.sheet{animation:none;} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div><h1>ZYNX Delivery</h1><small id="who">Loading…</small></div>
+  <a href="index.html">Home</a>
+</div>
+
+<div id="gate" class="gate" style="display:none;"></div>
+
+<div id="app" class="wrap" style="display:none;">
+  <div class="loc">
+    <span class="dot" id="loc-dot"></span>
+    <div><b id="loc-title">Location off</b><span id="loc-sub">Share your location so the shop can see where you are.</span></div>
+    <button id="loc-btn" onclick="startLocation()">Turn on</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="s-all">0</b><small>Given</small></div>
+    <div class="stat done"><b id="s-done">0</b><small>Delivered</small></div>
+    <div class="stat pend"><b id="s-pend">0</b><small>Pending</small></div>
+    <div class="stat"><b id="s-today">0</b><small>Today</small></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="tab-active" onclick="setTab('active')">To deliver</button>
+    <button class="tab" id="tab-done" onclick="setTab('done')">Delivered</button>
+  </div>
+  <div id="list"></div>
+</div>
+
+<div class="overlay" id="code-overlay">
+  <div class="sheet">
+    <div id="code-form">
+      <h3>Enter customer's code</h3>
+      <p id="code-sub">Ask the customer for the 6-digit delivery code shown in their ZYNX orders page.</p>
+      <div class="code" id="code-boxes"></div>
+      <div class="err" id="code-err"></div>
+      <div class="acts">
+        <button class="btn" onclick="closeCode()">Cancel</button>
+        <button class="btn green" id="code-go" onclick="confirmDelivery()">Confirm delivery</button>
+      </div>
+    </div>
+    <div id="code-done" style="display:none;text-align:center;">
+      <div class="ok-anim">✓</div>
+      <h3>Delivered</h3>
+      <p id="code-done-sub">The order is marked as delivered.</p>
+      <button class="btn primary" style="width:100%;" onclick="closeCode()">Done</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="perm-overlay">
+  <div class="sheet" style="text-align:center;">
+    <div class="ok-anim" style="background:var(--blue);font-size:38px;">📍</div>
+    <h3>Allow location access</h3>
+    <p id="perm-text">ZYNX needs your live location while you deliver, so the shop can see where you are and assign orders better. It is shared only while this page is open.</p>
+    <div class="acts">
+      <button class="btn" onclick="closePerm()">Not now</button>
+      <button class="btn primary" onclick="allowLocation()">Allow location</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAys1eaRX4ghLEt6gOucdEOgzv7fANH0do",
+    authDomain: "hashmani-mart.firebaseapp.com",
+    projectId: "hashmani-mart",
+    storageBucket: "hashmani-mart.firebasestorage.app",
+    messagingSenderId: "1023907051615",
+    appId: "1:1023907051615:web:389dfdb5d3e8a8382fc3ea",
+    measurementId: "G-X7Q43FY9F8"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let ME = null, BOY = null, ORDERS = {}, TAB = 'active', CODE_ORDER = null, watchId = null, lastSent = 0;
+  const unsubs = {};
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(msg, kind){ const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show ' + (kind || ''); clearTimeout(toast._t); toast._t = setTimeout(()=> t.className = 'toast', 2800); }
+  function gate(title, text, btn){
+    document.getElementById('app').style.display = 'none';
+    const g = document.getElementById('gate'); g.style.display = 'block';
+    g.innerHTML = '<h2>' + title + '</h2><p>' + text + '</p>' + (btn || '<a class="btn primary" href="index.html">Back to ZYNX</a>');
+  }
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href = 'login.html'; return; }
+    ME = user;
+    try{
+      const snap = await get(ref(db, 'deliveryBoys/' + user.uid));
+      if(!snap.exists() || !snap.val().active){
+        gate('No delivery access', 'This account is not a delivery partner yet. Ask the shop admin to give you delivery access.');
+        document.getElementById('who').textContent = user.email || '';
+        return;
+      }
+    }catch(e){ gate('Could not load', 'Please check your internet and try again.', '<button class="btn primary" onclick="location.reload()">Retry</button>'); return; }
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    onValue(ref(db, 'deliveryBoys/' + user.uid), s=>{ BOY = s.exists() ? s.val() : null; if(!BOY || !BOY.active){ location.reload(); return; } document.getElementById('who').textContent = (BOY.name || 'Delivery partner') + ' · online'; });
+    onValue(ref(db, 'deliveryAssignments/' + user.uid), s=>{
+      const ids = s.exists() ? Object.keys(s.val()) : [];
+      Object.keys(unsubs).forEach(id=>{ if(!ids.includes(id)){ unsubs[id](); delete unsubs[id]; delete ORDERS[id]; } });
+      ids.forEach(id=>{
+        if(unsubs[id]) return;
+        unsubs[id] = onValue(ref(db, 'orders/' + id), os=>{ if(os.exists()) ORDERS[id] = os.val(); else delete ORDERS[id]; render(); }, ()=>{});
+      });
+      render();
+    });
+    initPermission();
+  });
+
+  const isDone = o => o.orderStatus === 'Delivered';
+  function addrText(o){ const a = o.address || {}; return [a.line, a.landmark, a.city, a.state, a.pincode].filter(Boolean).join(', '); }
+  window.setTab = function(t){ TAB = t; document.getElementById('tab-active').classList.toggle('on', t === 'active'); document.getElementById('tab-done').classList.toggle('on', t === 'done'); render(); };
+
+  function render(){
+    const all = Object.keys(ORDERS).map(id => Object.assign({ id }, ORDERS[id]));
+    const done = all.filter(isDone), pend = all.filter(o => !isDone(o) && o.orderStatus !== 'Cancelled');
+    const today = new Date(); today.setHours(0,0,0,0);
+    document.getElementById('s-all').textContent = all.length;
+    document.getElementById('s-done').textContent = done.length;
+    document.getElementById('s-pend').textContent = pend.length;
+    document.getElementById('s-today').textContent = done.filter(o => (o.deliveredAt || 0) >= today.getTime()).length;
+    const list = TAB === 'active' ? pend.sort((a,b)=> (a.assignedAt||0) - (b.assignedAt||0)) : done.sort((a,b)=> (b.deliveredAt||0) - (a.deliveredAt||0));
+    document.getElementById('list').innerHTML = list.length ? list.map(card).join('') :
+      '<div class="empty">' + (TAB === 'active' ? 'No orders to deliver right now.<br>New orders from the shop will show up here.' : 'Delivered orders will appear here.') + '</div>';
+  }
+  function card(o){
+    const a = o.address || {}, phone = o.userPhone || a.phone || '', done = isDone(o), cod = (o.paymentMethod || '').toUpperCase() === 'COD' || /cod/i.test(o.paymentStatus || '') && !/paid/i.test(o.paymentStatus || '');
+    const items = (o.items || []).map(i => esc(i.name) + (i.variantLabel ? ' (' + esc(i.variantLabel) + ')' : '') + ' × ' + (i.qty || 1)).join(', ');
+    const way = o.deliveryStatus === 'On the way';
+    const maps = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addrText(o) || (a.name || ''));
+    return '<div class="card"><div class="row"><div><div class="num">#' + esc(o.orderNumber || o.id) + '</div><div class="sub">' + esc(a.name || o.userName || 'Customer') + (phone ? ' · ' + esc(phone) : '') + '</div></div>' +
+      '<span class="chip ' + (done ? 'done' : way ? 'way' : 'assigned') + '">' + (done ? 'Delivered' : way ? 'On the way' : 'Assigned') + '</span></div>' +
+      '<div class="addr">📍 ' + esc(addrText(o) || '—') + '</div><div class="items">' + items + '</div>' +
+      (done ? '<div class="sub">Delivered ' + (o.deliveredAt ? new Date(o.deliveredAt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit' }) : '') + '</div>' :
+      '<div class="pay ' + (cod ? 'cod' : '') + '"><span>' + (cod ? 'Collect cash on delivery' : 'Already paid') + '</span><b>' + (cod ? '₹' + Number(o.total || 0).toLocaleString('en-IN') : '✓') + '</b></div>' +
+      '<div class="acts">' + (phone ? '<a class="btn" href="tel:' + esc(phone) + '">📞 Call</a>' : '') + '<a class="btn" target="_blank" rel="noopener" href="' + maps + '">🧭 Navigate</a>' +
+      (way ? '' : '<button class="btn primary full" onclick="startTrip(\'' + o.id + '\')">Start delivery</button>') +
+      '<button class="btn green full" onclick="openCode(\'' + o.id + '\')">Mark delivered · enter code</button></div>') + '</div>';
+  }
+
+  window.startTrip = async function(id){
+    try{ await set(ref(db, 'orders/' + id + '/deliveryStatus'), 'On the way'); toast('Customer can see you are on the way', 'ok'); if(!watchId) startLocation(); }
+    catch(e){ toast('Could not update. Try again.', 'bad'); }
+  };
+
+  // ---- delivery code ----
+  window.openCode = function(id){
+    CODE_ORDER = id;
+    const o = ORDERS[id];
+    document.getElementById('code-sub').textContent = 'Order #' + (o.orderNumber || id) + '. Ask the customer for the 6-digit delivery code shown in their ZYNX orders page.';
+    document.getElementById('code-boxes').innerHTML = [0,1,2,3,4,5].map(i => '<input inputmode="numeric" maxlength="1" data-i="' + i + '" autocomplete="one-time-code">').join('');
+    document.getElementById('code-err').textContent = '';
+    document.getElementById('code-form').style.display = 'block'; document.getElementById('code-done').style.display = 'none';
+    document.getElementById('code-overlay').classList.add('show');
+    const inputs = [...document.querySelectorAll('#code-boxes input')];
+    inputs.forEach((inp, i)=>{
+      inp.addEventListener('input', ()=>{ inp.value = inp.value.replace(/\D/g, '').slice(-1); if(inp.value && inputs[i+1]) inputs[i+1].focus(); });
+      inp.addEventListener('keydown', e=>{ if(e.key === 'Backspace' && !inp.value && inputs[i-1]) inputs[i-1].focus(); if(e.key === 'Enter') confirmDelivery(); });
+      inp.addEventListener('paste', e=>{ const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if(t){ e.preventDefault(); inputs.forEach((x, k)=> x.value = t[k] || ''); (inputs[Math.min(t.length, 5)]).focus(); } });
+    });
+    setTimeout(()=> inputs[0].focus(), 120);
+  };
+  window.closeCode = function(){ document.getElementById('code-overlay').classList.remove('show'); CODE_ORDER = null; };
+  window.confirmDelivery = async function(){
+    const id = CODE_ORDER, o = ORDERS[id]; if(!o) return;
+    const code = [...document.querySelectorAll('#code-boxes input')].map(i => i.value).join('');
+    const err = document.getElementById('code-err');
+    if(code.length !== 6){ err.textContent = 'Enter all 6 digits.'; return; }
+    const btn = document.getElementById('code-go'); btn.disabled = true; btn.textContent = 'Checking…'; err.textContent = '';
+    try{
+      await set(ref(db, 'orders/' + id + '/enteredCode'), code);
+      try{ await set(ref(db, 'orders/' + id + '/orderStatus'), 'Delivered'); }
+      catch(e){ err.textContent = 'Wrong code. Please check with the customer and try again.'; btn.disabled = false; btn.textContent = 'Confirm delivery'; return; }
+      const now = Date.now(), hist = (o.statusHistory || []).concat([{ status:'Delivered', at:now }]);
+      await Promise.all([
+        set(ref(db, 'orders/' + id + '/deliveredAt'), now),
+        set(ref(db, 'orders/' + id + '/deliveredBy'), ME.uid),
+        set(ref(db, 'orders/' + id + '/deliveryStatus'), 'Delivered'),
+        set(ref(db, 'orders/' + id + '/statusHistory'), hist),
+        (o.paymentMethod || '').toUpperCase() === 'COD' ? set(ref(db, 'orders/' + id + '/paymentStatus'), 'Paid (cash collected on delivery)') : Promise.resolve()
+      ]).catch(()=>{});
+      document.getElementById('code-form').style.display = 'none'; document.getElementById('code-done').style.display = 'block';
+      document.getElementById('code-done-sub').textContent = 'Order #' + (o.orderNumber || id) + ' is delivered. The customer and the shop can see it now.';
+      btn.disabled = false; btn.textContent = 'Confirm delivery';
+    }catch(e){ err.textContent = 'Could not confirm. Check your internet and try again.'; btn.disabled = false; btn.textContent = 'Confirm delivery'; }
+  };
+
+  // ---- location permission ----
+  async function initPermission(){
+    if(!navigator.geolocation){ setLoc(false, 'Not supported', 'This device cannot share location.'); return; }
+    let state = 'prompt';
+    try{ if(navigator.permissions) { const p = await navigator.permissions.query({ name:'geolocation' }); state = p.state; p.onchange = ()=>{ if(p.state === 'granted' && !watchId) startLocation(); }; } }catch(e){}
+    if(state === 'granted'){ startLocation(); }
+    else if(state === 'denied'){ blockedUI(); }
+    else { document.getElementById('perm-overlay').classList.add('show'); }
+  }
+  function blockedUI(){ setLoc(false, 'Location blocked', 'Tap the lock icon in the address bar → Site settings → Location → Allow, then reload this page.'); }
+  window.closePerm = function(){ document.getElementById('perm-overlay').classList.remove('show'); };
+  window.allowLocation = function(){ closePerm(); if(!watchId) startLocation(); };
+
+  // ---- location sharing ----
+  function setLoc(on, title, sub){ document.getElementById('loc-dot').classList.toggle('on', on); document.getElementById('loc-title').textContent = title; document.getElementById('loc-sub').textContent = sub; document.getElementById('loc-btn').textContent = on ? 'Turn off' : 'Turn on'; }
+  window.startLocation = function(silent){
+    if(watchId && silent !== true){ navigator.geolocation.clearWatch(watchId); watchId = null; localStorage.setItem('zynx_loc_on', '0'); setLoc(false, 'Location off', 'Share your location so the shop can see where you are.'); return; }
+    if(!navigator.geolocation){ setLoc(false, 'Not supported', 'This device cannot share location.'); return; }
+    watchId = navigator.geolocation.watchPosition(pos=>{
+      setLoc(true, 'Sharing live location', 'Keep this page open while you deliver.');
+      localStorage.setItem('zynx_loc_on', '1');
+      if(Date.now() - lastSent < 15000) return; lastSent = Date.now();
+      set(ref(db, 'deliveryBoys/' + ME.uid + '/loc'), { lat:pos.coords.latitude, lng:pos.coords.longitude, acc:pos.coords.accuracy || 0, t:Date.now() }).catch(()=>{});
+    }, e=>{
+      watchId = null; localStorage.setItem('zynx_loc_on', '0');
+      if(e.code === 1) blockedUI(); else setLoc(false, 'Location unavailable', 'Could not get your position. Try again outside or with GPS on.');
+    }, { enableHighAccuracy:true, maximumAge:10000, timeout:20000 });
+  };
+</script>
+</body>
+</html>
