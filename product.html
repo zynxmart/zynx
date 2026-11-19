@@ -1290,14 +1290,19 @@ input:focus,textarea:focus,select:focus{border-color:var(--zx-lav-3)!important;b
     renderSimilarProducts(p);
   }
 
-  function loadCatalogue(){
-    onValue(ref(db, 'products'), (snap)=>{
-      PRODUCTS = snap.exists() ? snap.val() : {};
-      renderProductDetail();
-      refreshWishlistUI();
-    }, ()=>{
-      document.getElementById('pd-loading').textContent = "Couldn't load the product. Please refresh the page.";
-    });
+  // Fast path: fetch ONLY this product first, then the rest of the catalogue in the background
+  // (needed for "similar products" and search). No live listener = far fewer connections and downloads.
+  async function loadCatalogue(){
+    const fail = ()=>{ const l = document.getElementById('pd-loading'); if(l) l.textContent = "Couldn't load the product. Please refresh the page."; };
+    try{
+      if(currentProductId){
+        const one = await get(ref(db, 'products/' + currentProductId));
+        if(one.exists()){ PRODUCTS = {}; PRODUCTS[currentProductId] = one.val(); renderProductDetail(); refreshWishlistUI(); }
+      }
+      const all = await get(ref(db, 'products'));
+      PRODUCTS = all.exists() ? all.val() : {};
+      renderProductDetail(); refreshWishlistUI();
+    }catch(e){ if(Object.keys(PRODUCTS).length === 0) fail(); }
   }
 
   // ---------- generic honest placeholder for unbuilt features ----------
